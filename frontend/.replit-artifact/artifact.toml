@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Flipkart Catalog Mapper"
+version = "1.0.0"
+id = "artifacts/flipkart-catalog"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25993
+
+[services.development]
+run = "PATH=/nix/store/bl6iwirn83qj9r8wng43kfdqd5mfahj8-nodejs-22.22.0/bin:/home/runner/.local/bin:$PATH pnpm --filter @workspace/flipkart-catalog run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/flipkart-catalog", "run", "build" ]
+publicDir = "frontend/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25993"
+BASE_PATH = "/"

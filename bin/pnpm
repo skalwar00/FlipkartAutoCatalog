@@ -1,0 +1,2 @@
+#!/nix/store/bl6iwirn83qj9r8wng43kfdqd5mfahj8-nodejs-22.22.0/bin/node
+require('/home/runner/.local/lib/node_modules/pnpm/dist/pnpm.cjs')

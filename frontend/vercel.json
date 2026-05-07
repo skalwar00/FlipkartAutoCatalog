@@ -1,0 +1,13 @@
+{
+  "buildCommand": "pnpm --filter @workspace/flipkart-catalog run build",
+  "outputDirectory": "dist/public",
+  "installCommand": "pnpm install",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "env": {
+    "BASE_PATH": "/",
+    "NODE_ENV": "production"
+  }
+}
