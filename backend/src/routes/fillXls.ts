@@ -5,8 +5,10 @@ import { writeFileSync, unlinkSync, existsSync, readFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import { fileURLToPath } from "url";
 
 const router = Router();
+const routeDir = fileURLToPath(new URL(".", import.meta.url));
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -67,14 +69,31 @@ router.post(
       writeFileSync(configPath, JSON.stringify(config));
 
       const pythonPath = process.env.PYTHON_PATH || "python3";
-      const scriptPath = join(process.cwd(), "../python/fill_xls.py");
+      const scriptPathCandidates = [
+        join(process.cwd(), "../python/fill_xls.py"),
+        join(process.cwd(), "python/fill_xls.py"),
+        join(routeDir, "../../../python/fill_xls.py"),
+        join(routeDir, "../../python/fill_xls.py"),
+      ];
+      const scriptPath =
+        scriptPathCandidates.find((candidate) => existsSync(candidate)) ??
+        scriptPathCandidates[0];
 
-      // Include .pythonlibs so pip-installed packages (xlrd, xlwt, etc.) are visible
-      const pythonLibs = join(process.cwd(), "../.pythonlibs/lib/python3.11/site-packages");
+      // Include project-local .pythonlibs if present (local dev compatibility),
+      // while still working when Railway installs packages globally.
+      const pythonLibCandidates = [
+        join(process.cwd(), "../.pythonlibs/lib/python3.11/site-packages"),
+        join(process.cwd(), ".pythonlibs/lib/python3.11/site-packages"),
+        join(routeDir, "../../../.pythonlibs/lib/python3.11/site-packages"),
+        join(routeDir, "../../.pythonlibs/lib/python3.11/site-packages"),
+      ];
+      const pythonLibs = pythonLibCandidates.find((candidate) => existsSync(candidate));
       const existingPythonPath = process.env.PYTHONPATH || "";
       const spawnEnv = {
         ...process.env,
-        PYTHONPATH: existingPythonPath ? `${pythonLibs}:${existingPythonPath}` : pythonLibs,
+        PYTHONPATH: pythonLibs
+          ? (existingPythonPath ? `${pythonLibs}:${existingPythonPath}` : pythonLibs)
+          : existingPythonPath,
       };
 
       const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>(

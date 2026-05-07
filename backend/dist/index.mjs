@@ -27925,7 +27925,7 @@ var require_pino = __commonJS({
     function pinoBundlerAbsolutePath(p) {
       try {
         const path = __require("path");
-        const outputDir = "/home/runner/workspace/backend/dist";
+        const outputDir = "/Users/sunil/Downloads/Flipkart-front and back/backend/dist";
         return path.resolve(outputDir, p.replace(/^\.\//, ""));
       } catch (e) {
         const f = new Function("p", "return new URL(p, import.meta.url).pathname");
@@ -48939,7 +48939,9 @@ import { writeFileSync, unlinkSync, existsSync, readFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import { fileURLToPath } from "url";
 var router2 = (0, import_express2.Router)();
+var routeDir = fileURLToPath(new URL(".", import.meta.url));
 var upload = (0, import_multer.default)({
   storage: import_multer.default.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 }
@@ -48988,12 +48990,24 @@ router2.post(
       }
       writeFileSync(configPath, JSON.stringify(config));
       const pythonPath = process.env.PYTHON_PATH || "python3";
-      const scriptPath = join(process.cwd(), "../python/fill_xls.py");
-      const pythonLibs = join(process.cwd(), "../.pythonlibs/lib/python3.11/site-packages");
+      const scriptPathCandidates = [
+        join(process.cwd(), "../python/fill_xls.py"),
+        join(process.cwd(), "python/fill_xls.py"),
+        join(routeDir, "../../../python/fill_xls.py"),
+        join(routeDir, "../../python/fill_xls.py")
+      ];
+      const scriptPath = scriptPathCandidates.find((candidate) => existsSync(candidate)) ?? scriptPathCandidates[0];
+      const pythonLibCandidates = [
+        join(process.cwd(), "../.pythonlibs/lib/python3.11/site-packages"),
+        join(process.cwd(), ".pythonlibs/lib/python3.11/site-packages"),
+        join(routeDir, "../../../.pythonlibs/lib/python3.11/site-packages"),
+        join(routeDir, "../../.pythonlibs/lib/python3.11/site-packages")
+      ];
+      const pythonLibs = pythonLibCandidates.find((candidate) => existsSync(candidate));
       const existingPythonPath = process.env.PYTHONPATH || "";
       const spawnEnv = {
         ...process.env,
-        PYTHONPATH: existingPythonPath ? `${pythonLibs}:${existingPythonPath}` : pythonLibs
+        PYTHONPATH: pythonLibs ? existingPythonPath ? `${pythonLibs}:${existingPythonPath}` : pythonLibs : existingPythonPath
       };
       const { stdout, stderr } = await new Promise(
         (resolve, reject) => {
@@ -49065,6 +49079,7 @@ var logger = (0, import_pino.default)({
 
 // src/app.ts
 var app = (0, import_express4.default)();
+var allowedOrigins = (process.env.FRONTEND_ORIGIN ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 app.use(
   (0, import_pino_http.default)({
     logger,
@@ -49084,7 +49099,11 @@ app.use(
     }
   })
 );
-app.use((0, import_cors.default)());
+app.use(
+  (0, import_cors.default)({
+    origin: allowedOrigins.length === 0 ? true : allowedOrigins
+  })
+);
 app.use(import_express4.default.json());
 app.use(import_express4.default.urlencoded({ extended: true }));
 app.use("/api", routes_default);

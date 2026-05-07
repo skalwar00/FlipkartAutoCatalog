@@ -405,7 +405,12 @@ export default function CatalogMapper() {
         formData.append("oldHeaderRow", String(oldData.headerRowIndex));
         formData.append("dataRows", JSON.stringify(dataRows));
 
-        const response = await fetch(`${import.meta.env.BASE_URL}api/fill-xls`, {
+        const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+        const fillXlsUrl = apiBaseUrl
+          ? `${apiBaseUrl}/api/fill-xls`
+          : `${import.meta.env.BASE_URL}api/fill-xls`;
+
+        const response = await fetch(fillXlsUrl, {
           method: "POST",
           body: formData,
         });
