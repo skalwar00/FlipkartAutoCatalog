@@ -12,7 +12,10 @@ const routeDir = fileURLToPath(new URL(".", import.meta.url));
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 },
+  limits: { 
+    fileSize: 50 * 1024 * 1024,   // 50MB max file size (purani setting)
+    fieldSize: 25 * 1024 * 1024,  // 25MB max text field size (Nayi line: Taaki dataRows crash na karein)
+  },
 });
 
 router.post(
